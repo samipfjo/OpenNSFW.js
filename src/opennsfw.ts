@@ -129,7 +129,7 @@ export class OpenNSFW {
         this.getLoadPromise      = this.getLoadPromise.bind(this);
         this.imageToImageData    = this.imageToImageData.bind(this);
         this.preprocessImage     = this.preprocessImage.bind(this);
-        this.checkIfCached       = this.checkIfCached.bind(this);
+        this.isCached            = this.isCached.bind(this);
     }
 
     /**
@@ -237,7 +237,7 @@ export class OpenNSFW {
         return new Promise(async resolve => {
             tf.serialization.registerClass(PadTensor);
 
-            const was_cached = await this.checkIfCached();
+            const was_cached = await this.isCached();
 
             if (was_cached) {
                 console.debug('OpenNSFW :: model was cached, loading...');
@@ -348,7 +348,7 @@ export class OpenNSFW {
      * 
      * @returns A promise thats resolves to a boolean representing whether or not the model was cached
     **/
-    private async checkIfCached(): Promise<boolean> {
+    private async isCached(): Promise<boolean> {
         return new Promise((resolve) => {
             // Ask for database session
             // This creates the database if it doesn't already exist, which breaks tensorflowjs, so we need to run a db upgrade
