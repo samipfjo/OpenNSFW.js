@@ -3,11 +3,24 @@
 
 <br>
 
-[Read the documentation here](https://lukepfjo.github.io/OpenNSFW.js/)
+### Motivation
+ There are several projects that offer Tensorflow.js NSFW classification, but all of the models I tried had serious training bias against people of color, causing regular false positives due to the subject's skin color. This was highly disturbing and made them completely unusable for the project I was working on ([YouTube Spam Remover](https://github.com/lukepfjo/YouTube-Spam-Remover)). After several days of searching, the best model I could find was Yahoo's OpenNSFW. There was not yet a port to Tensorflow.js, and thus this project was born.
 
 <br>
 
-Usage:
+### Credits
+ This project stands on the shoulders of giants. A huge thanks to the following for making it possible:
+ - [Yahoo](https://github.com/yahoo/open_nsfw), for making their Caffe classification model open-source
+ - [Marc Dietrichstein](https://github.com/mdietrichstein/tensorflow-open_nsfw), for porting OpenNSFW to TensorFlow 1
+ - [Bosco Yung](https://github.com/bhky/opennsfw2), for porting the aforementioned TensorFlow model to TensorFlow 2.
+
+<br>
+
+### [Read the API documentation here](https://lukepfjo.github.io/OpenNSFW.js/)
+
+<br>
+
+### Usage:
 
 ```html
 <script src="opennsfw.min.js"></script>  <!-- Or include it in your bundle -->
@@ -43,6 +56,6 @@ Usage:
 
 <!-- (...) -->
 
-<img src="some-img.jpg">
-<h3 id="result></h3>
+<div><img src="img-1.jpg"></div>
+<div><img src="img-2.jpg"></div>
 ```
