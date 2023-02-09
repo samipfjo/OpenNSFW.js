@@ -119,12 +119,17 @@ export class OpenNSFW {
         this.model          = null;
         this.loaded         = false;
 
-        this.load                = this.load.bind(this);
-        this.save                = this.save.bind(this);
+
         this.classifyImages      = this.classifyImages.bind(this);
         this.classifySingleImage = this.classifySingleImage.bind(this);
-        this.imageToImagedata    = this.imageToImagedata.bind(this);
+        this.prime               = this.prime.bind(this);
+        this.save                = this.save.bind(this);
+        this.load                = this.load.bind(this);
+        this.isLoaded            = this.isLoaded.bind(this);
+        this.getLoadPromise      = this.getLoadPromise.bind(this);
+        this.imageToImageData    = this.imageToImageData.bind(this);
         this.preprocessImage     = this.preprocessImage.bind(this);
+        this.checkIfCached       = this.checkIfCached.bind(this);
     }
 
     /**
