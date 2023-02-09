@@ -95,6 +95,12 @@ type Images = ImageData | HTMLImageElement | HTMLCanvasElement | ImageBitmap;
 
 // ====
 
+/**
+ * A image classifier that determines an image's inappropriateness (in regards to nudity) with percent certainty.
+ * This percentage roughly correlates to the amount of nudity present in an image.
+ * 
+ * Utilizes a ported version of Yahoo's OpenNSFW model.
+ */
 export class OpenNSFW {
     private image_size: number;
     private nsfw_threshold: number;
@@ -106,10 +112,7 @@ export class OpenNSFW {
     private static model_url      = 'https://raw.githubusercontent.com/lukepfjo/YouTube-Spam-Remover/main/src/extern/opennsfwjs/model/model.json';
 
     /**
-     * A image classifier that determines an image's inappropriateness (in regards to nudity) with percent certainty.
-     * This percentage roughly correlates to the amount of nudity present in an image.
-     * 
-     * Utilizes a ported version of Yahoo's OpenNSFW model.
+     * Initialize the model handler. Be sure to call this.load() after initializing.
      * 
      * @param nsfw_threshold The threshhold percentage (as a decimal) at which the image should be considered NSFW
     **/
@@ -118,7 +121,6 @@ export class OpenNSFW {
         this.nsfw_threshold = nsfw_threshold;
         this.model          = null;
         this.loaded         = false;
-
 
         this.classifyImages      = this.classifyImages.bind(this);
         this.classifySingleImage = this.classifySingleImage.bind(this);
