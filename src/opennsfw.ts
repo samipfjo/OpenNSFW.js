@@ -158,7 +158,7 @@ export class OpenNSFW {
         return new Promise(async (resolve) => {
             // Workaround for browser security protections caused by interacting directly with image elements
             if (image['src']) {
-                image = await this.imageToImagedata((image as HTMLImageElement).src);
+                image = await this.imageToImageData((image as HTMLImageElement).src);
             }
 
             // Get the image into a format that's compatible with the model
@@ -176,7 +176,7 @@ export class OpenNSFW {
     }
 
     /**
-     * Feeds the model an initial image to ensure subsequent classifications are fast.
+     * Feeds the model initial data to ensure subsequent classifications are fast.
      * The longer run time of the first image is unfortunately intrinsic to this variety of ML model.
      *
      * @returns A void promise that resolves when the priming finishes
@@ -227,7 +227,7 @@ export class OpenNSFW {
         return new Promise(async resolve => {
             tf.serialization.registerClass(PadTensor);
 
-            const was_cached = await this.check_if_cached();
+            const was_cached = await this.checkIfCached();
 
             if (was_cached) {
                 console.debug('OpenNSFW :: model was cached, loading...');
@@ -260,7 +260,7 @@ export class OpenNSFW {
      * 
      * @returns A boolean representing whether or not the model has loaded
     **/
-    public is_loaded(): boolean {
+    public isLoaded(): boolean {
         return this.loaded;
     }
 
@@ -269,7 +269,7 @@ export class OpenNSFW {
      * 
      * @returns A promise that resolves once the model load has completed
     **/
-    public async get_load_promise(): Promise<void> {
+    public async getLoadPromise(): Promise<void> {
         return this.load_promise;
     }
 
@@ -279,7 +279,7 @@ export class OpenNSFW {
      * @param image_src The URL at which the image resides
      * @returns A promise that resolves to ImageData containing the provided image
     **/
-    private async imageToImagedata(image_src: string): Promise<ImageData> {
+    private async imageToImageData(image_src: string): Promise<ImageData> {
         return new Promise(async (resolve) => {
             let image_response = null;
 
@@ -338,7 +338,7 @@ export class OpenNSFW {
      * 
      * @returns A promise thats resolves to a boolean representing whether or not the model was cached
     **/
-    private async check_if_cached(): Promise<boolean> {
+    private async checkIfCached(): Promise<boolean> {
         return new Promise((resolve) => {
             // Ask for database session
             // This creates the database if it doesn't already exist, which breaks tensorflowjs, so we need to run a db upgrade
