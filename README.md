@@ -1,4 +1,4 @@
-# OpenNSFW JS
+# OpenNSFW.js
  A nudity classifier for web browsers utilizing Yahoo's OpenNSFW model
 
 <br>
