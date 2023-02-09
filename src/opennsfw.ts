@@ -193,11 +193,16 @@ export class OpenNSFW {
 
         console.debug('OpenNSFW :: priming');
 
-        const empty_img = new ImageData(244, 244);
-        await (OpenNSFW as any).classifyImages(empty_img);
+        const output_tensor = tf.tidy(() => {
+            return this.model.execute({ 'input': tf.zeros([1, 224, 224, 3])},  ['predictions']) as tf.Tensor2D;
+        });
 
-        console.debug('OpenNSFW :: primed');
-        return;
+        return new Promise<void>(resolve => {
+            output_tensor.data().then(() => {
+                console.debug('OpenNSFW :: primed');
+                resolve();
+            });
+        });
     }
 
     /**
