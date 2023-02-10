@@ -151,7 +151,7 @@ export class OpenNSFW {
         if (typeof images[Symbol.iterator] !== 'function') {
             return this.classifySingleImage(images as Images);
         } else {
-            return Promise.all(Array.prototype.map(this.classifySingleImage, images));
+            return Promise.all(Array.from(images as Images[]).map(this.classifySingleImage, this));
         }
     }
 
