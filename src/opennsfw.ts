@@ -355,47 +355,60 @@ export class OpenNSFW {
             // Ask for database session
             // This creates the database if it doesn't already exist, which breaks tensorflowjs, so we need to run a db upgrade
             const db_open_request = indexedDB.open('tensorflowjs', 1);
+
+            const hard_reset = () => {
+                return new Promise<void>(__resolve => {
+                    // something went wrong, so drop the database and start from scratch
+                    indexedDB.deleteDatabase('tensorflowjs').onsuccess = async () => {
+                        __resolve();
+                    };
+                });
+            }
     
             // DB didn't exist yet, or our version number has changed
-            db_open_request.onupgradeneeded = () => {
+            db_open_request.onupgradeneeded = (event: IDBVersionChangeEvent): any => {
                 // Get reference to database session instance
-                let idb_instance = db_open_request.result;
+                const idb_instance = (event.target as IDBRequest).result as IDBDatabase;
     
-                // Open a database transaction; empty array for "no object stores exist to even get permission for!"
-                let transaction: any = idb_instance.transaction([], 'readwrite', {'durability': 'strict'});
-    
-                transaction.createObjectStore("models_store");
-                transaction.createObjectStore("model_info_store");
-    
-                transaction.commit();
+                idb_instance.createObjectStore("models_store", {'keyPath': 'modelPath'});
+                idb_instance.createObjectStore("model_info_store", {'keyPath': 'modelPath'});
+
                 resolve(false);
             };
     
             db_open_request.onsuccess = async() => {
                 // Reference to database
-                let idb_instance = db_open_request.result;
-    
-                let transaction = idb_instance.transaction(['models_store'], 'readonly');
-                let obj = transaction.objectStore('models_store');
+                const idb_instance = db_open_request.result;
+
+                try {
+                    var transaction = idb_instance.transaction(['models_store', 'model_info_store'], 'readwrite');
+                } catch (DOMException) {
+                    idb_instance.close();
+                    await hard_reset();
+                    return;
+                }
+
+                const obj = transaction.objectStore('models_store');
                 let req: IDBRequest<any> | null = null;
-                
-                await new Promise<void>((_res, _rej) => {
-                    let obj_req = obj.get(OpenNSFW.indexeddb_name);
+
+                await new Promise<void>((__resolve, __reject) => {
+                    const obj_req = obj.get(OpenNSFW.indexeddb_name);
     
                     obj_req.onsuccess = () => {
                         req = obj_req;
-                        _res();
+                        __resolve();
                     }
     
-                    obj_req.onerror = _rej;
+                    obj_req.onerror = __reject;
                 });
     
                 resolve((req as any).result?.modelPath === OpenNSFW.indexeddb_name);
             };
     
-            db_open_request.onerror = () => {
+            db_open_request.onerror = async () => {
+                console.debug('Encountered database error while trying to load OpenNSFW model; deleting DB if it exists..');
+                await hard_reset();
                 resolve(false);
-                throw new Error('Encountered database error while trying to load OpenNSFW model');
             }
 
             db_open_request.onblocked = () => {
