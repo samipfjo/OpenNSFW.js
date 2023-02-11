@@ -1,7 +1,7 @@
 "use strict";
 
 /*
-    Where marked "@license MIT (...)"" below:
+    Where marked "@license MIT (...)" below:
 
     Copyright (c) [inline specified year] [inline specified copyright owner]
 
@@ -25,7 +25,7 @@
 
     =============================================================================
 
-	Where marked "@license BSD 2C (...)"" below:
+	Where marked "@license BSD 2C (...)" below:
 
 	BSD 2-Clause License
 	
@@ -55,7 +55,7 @@
 
     =============================================================================
 
-	For code marked with "@license Apache 2.0 (...)"" below:
+	For code marked with "@license Apache 2.0 (...)" below:
 
     Copyright [inline specified year] [inline specified copyright owner]
 
@@ -100,7 +100,7 @@ type Images = ImageData | HTMLImageElement | HTMLCanvasElement | ImageBitmap;
  * This percentage roughly correlates to the amount of nudity present in an image.
  * 
  * Utilizes a ported version of Yahoo's OpenNSFW model.
- */
+**/
 export class OpenNSFW {
     private image_size: number;
     private nsfw_threshold: number;
