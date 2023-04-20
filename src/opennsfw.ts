@@ -81,8 +81,15 @@
 
 
 import * as tf from '@tensorflow/tfjs';
+import '@tensorflow/tfjs-backend-webgpu';
 
 tf.enableProdMode();
+
+try {
+    tf.setBackend('webgpu');
+
+// On a browser that does not yet support webgpu
+} catch { }
 
 // ====
 
