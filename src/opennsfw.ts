@@ -74,7 +74,7 @@
 
 /* Preserve Apache license above! It's relevant after building. */
 
-/* @license MIT    - Copyright 2023, Luke Pflibsen-Jones - credit: port from TensorFlow 2 to TensorFlowJS               */
+/* @license MIT    - Copyright 2023, Sami Pflibsen-Jones - credit: port from TensorFlow 2 to TensorFlowJS               */
 /* @license MIT    - Copyright 2021, Bosco Yung          - credit: port of Marc Dietrichstein's port to TensorFlow 2    */
 /* @license BSD 2C - Copyright 2017, Marc Dietrichstein  - credit: original port from Yahoo's Caffe model to TensorFlow */
 /* @license BSD 2C - Copyright 2016, Yahoo Inc.          - credit: creator of the OpenNSFW project                      */
@@ -104,12 +104,13 @@ type Images = ImageData | HTMLImageElement | HTMLCanvasElement | ImageBitmap;
 export class OpenNSFW {
     private image_size: number;
     private nsfw_threshold: number;
-    private model_path: string;
     private model: tf.GraphModel | null;
-    private load_promise: Promise<void>;
+    private load_promise: DeferredPromise;
     private loaded: boolean;
+    private canvas: OffscreenCanvas;
+    private canvas_context: OffscreenCanvasRenderingContext2D;
     private static indexeddb_name = 'opennsfw';
-    private static model_url      = 'https://raw.githubusercontent.com/lukepfjo/YouTube-Spam-Remover/main/src/extern/opennsfwjs/model/model.json';
+    private static model_url      = 'https://raw.githubusercontent.com/samipfjo/YouTube-Spam-Remover/main/src/extern/opennsfwjs/model/model.json';
 
     /**
      * Initialize the model handler. Be sure to call this.load() after initializing.
@@ -120,7 +121,11 @@ export class OpenNSFW {
         this.image_size     = 224;
         this.nsfw_threshold = nsfw_threshold;
         this.model          = null;
+        this.load_promise   = new DeferredPromise();
         this.loaded         = false;
+
+        this.canvas         = new OffscreenCanvas(this.image_size, this.image_size);
+        this.canvas_context = this.canvas.getContext("2d", { willReadFrequently: true });
 
         this.classifyImages      = this.classifyImages.bind(this);
         this.classifySingleImage = this.classifySingleImage.bind(this);
@@ -143,9 +148,11 @@ export class OpenNSFW {
      *           is_nsfw = (nsfw_confidence > this.nsfw_threshold)}
     **/
     public async classifyImages(images: Images | Images[]): Promise<NSFWResult | NSFWResult[]> {
-        if (!this.loaded) {
-            throw new Error("OpenNSFW :: model has not been loaded yet.");
+        if (images === undefined) {
+            return Promise.reject("OpenNSFW :: expected image-like object(s), got undefined (during classifyImages)");
         }
+
+        await this.load_promise.promise;
 
         // Run the classification process, returning a promise that resolves to a single or array of NSFWResult(s)
         if (typeof images[Symbol.iterator] !== 'function') {
@@ -162,6 +169,12 @@ export class OpenNSFW {
      * @returns The NSFWResult representing the resulting classification
     **/
     private async classifySingleImage(image: Images): Promise<NSFWResult> {
+        if (image === undefined) {
+            return Promise.reject("OpenNSFW :: expected image-like object, got undefined (during classifyImage)");
+        }
+
+        await this.load_promise.promise;
+
         return new Promise(async (resolve) => {
             // Workaround for browser security protections caused by interacting directly with image elements
             if (image['src']) {
@@ -174,7 +187,7 @@ export class OpenNSFW {
             // tf.tidy() help protect against memory leaks; we aren't working with tf primitives, but
             // there's no reason not to use it.
             const output_tensor = tf.tidy(() => {
-                return this.model.execute({ 'input': image_tensor },  ['predictions']) as tf.Tensor2D;
+                return this.model?.execute({ 'input': image_tensor },  ['predictions']) as tf.Tensor2D;
             });
 
             const raw_result = await output_tensor.data();
@@ -189,14 +202,12 @@ export class OpenNSFW {
      * @returns A void promise that resolves when the priming finishes
     **/
     public async prime(): Promise<void> {
-        if (!this.loaded) {
-            throw new Error("OpenNSFW :: model has not been loaded yet.");
-        }
+        await this.load_promise.promise;
 
         console.debug('OpenNSFW :: priming');
 
         const output_tensor = tf.tidy(() => {
-            return this.model.execute({ 'input': tf.zeros([1, 224, 224, 3])},  ['predictions']) as tf.Tensor2D;
+            return this.model?.execute({ 'input': tf.zeros([1, 224, 224, 3])},  ['predictions']) as tf.Tensor2D;
         });
 
         return new Promise<void>(resolve => {
@@ -214,14 +225,17 @@ export class OpenNSFW {
     **/
     public async save(): Promise<void> {
         if (!this.loaded) {
-            throw new Error("OpenNSFW :: model has not been loaded yet.");
+            throw new Error("OpenNSFW :: model has not been loaded yet (during save)");
+        }
+
+        if (this.model === null) {
+            throw new Error('OpenNSFW :: model was null (during save)');
         }
 
         return new Promise(async resolve => {
             console.debug('OpenNSFW :: saving model to local database...');
 
-            this.model_path = `indexeddb://${OpenNSFW.indexeddb_name}`;
-            await this.model.save(this.model_path);
+            await this.model?.save(`indexeddb://${OpenNSFW.indexeddb_name}`);
 
             console.debug('OpenNSFW :: model saved');
 
@@ -245,26 +259,23 @@ export class OpenNSFW {
 
             if (was_cached) {
                 console.debug('OpenNSFW :: model was cached, loading...');
-                this.model_path = `indexeddb://${OpenNSFW.indexeddb_name}`;
+                var model_path = `indexeddb://${OpenNSFW.indexeddb_name}`;
     
             } else {
                 console.debug('OpenNSFW :: model was not cached, fetching from GitHub...');
-                this.model_path = OpenNSFW.model_url;
+                var model_path = OpenNSFW.model_url;
             }
 
-            this.load_promise = new Promise(async resolve => {
-                this.model = await tf.loadGraphModel(this.model_path);
-                this.loaded = true;
-                resolve();
-            });
+            this.model = await tf.loadGraphModel(model_path);
+            this.loaded = true;
+            this.load_promise.resolve();
 
-            await this.load_promise;
-    
             if (!was_cached && save_after_loaded) {
                 this.save();
             }
     
             console.debug('OpenNSFW :: model loaded');
+
             resolve();
         });
     }
@@ -283,7 +294,7 @@ export class OpenNSFW {
      * 
      * @returns A promise that resolves once the model load has completed
     **/
-    public async getLoadPromise(): Promise<void> {
+    public async getLoadPromise(): Promise<any> {
         return this.load_promise;
     }
 
@@ -294,15 +305,16 @@ export class OpenNSFW {
      * @returns A promise that resolves to ImageData containing the provided image
     **/
     private async imageToImageData(image_src: string): Promise<ImageData> {
-        return new Promise(async (resolve) => {
-            let image_response = null;
+        return new Promise(async (resolve, reject) => {
+            let image_response: any = null;
 
             try {
                 image_response = await fetch(image_src);
         
-            } catch (error) {
+            } catch (error: any) {
                 if (error.name === 'NetworkError') {
                     console.error(`OpenNSFW :: NetworkError while fetching image ${image_src}: ${error.message}`);
+                    reject(`OpenNSFW :: NetworkError while fetching image ${image_src}: ${error.message}`);
                     return;
                 } else {
                     throw error;
@@ -312,11 +324,18 @@ export class OpenNSFW {
             const image_blob = await image_response.blob();
             const bitmap = await createImageBitmap(image_blob);
 
-            const canvas = new OffscreenCanvas(this.image_size, this.image_size);
-            const context = canvas.getContext("2d");
-            context.drawImage(bitmap, 0, 0, this.image_size, this.image_size);
+            //const canvas = new OffscreenCanvas(this.image_size, this.image_size);
+            //const context = canvas.getContext("2d");
+
+            if (!this.canvas_context) {
+                console.error(`OpenNSFW :: Canvas context was invalid while converting to Imagedata`)
+                reject(`OpenNSFW :: Canvas context was invalid while converting to Imagedata`);
+                return;
+            }
+
+            this.canvas_context.drawImage(bitmap, 0, 0, this.image_size, this.image_size);
         
-            resolve(context.getImageData(0, 0, this.image_size, this.image_size));
+            resolve(this.canvas_context.getImageData(0, 0, this.image_size, this.image_size));
         });
     }
 
@@ -425,11 +444,24 @@ export class OpenNSFW {
 global.OpenNSFW = OpenNSFW;
 
 
+class DeferredPromise {
+    promise: Promise<any>;
+    reject: any;
+    resolve: any;
+
+    constructor() {
+          this.promise = new Promise((resolve, reject)=> {
+            this.reject = reject
+            this.resolve = resolve
+          });
+    }
+}
+
 class PadTensor extends tf.layers.Layer {
     padding: any;
     shape: (number|null)[];
 
-    constructor(_) {
+    constructor(_: any) {
         super({ });
 
         // The padding you are adding in the Keras model
