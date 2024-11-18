@@ -427,7 +427,7 @@ global.OpenNSFW = OpenNSFW;
 
 class PadTensor extends tf.layers.Layer {
     padding: any;
-    shape: number[];
+    shape: (number|null)[];
 
     constructor(_) {
         super({ });
