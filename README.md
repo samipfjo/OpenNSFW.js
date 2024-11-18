@@ -27,28 +27,26 @@
 
 <script>
 	async function classify_images() {
-		const nsfw = new window.OpenNSFW('/static/model/model.json');
+		const nsfw = new window.OpenNSFW();
 		await nsfw.load();
 
 		// this.prime() speeds up subsequent classifications, but it's not helpful
 		// here as we're immediately classifying an image after the model loads
 		// await opennsfw.prime();
 
-		const images = document.querySelectorAll('img');
-		
-		nsfw.classifyImages(images).then((output) => {
-			let img_index = 0;
+		const images  = document.querySelectorAll('img');		
+		const results = await nsfw.classifyImages(images)
 
-			for (let result of output) {
-				const new_text = document.createElement('h4');
-				const confidence = (result.nsfw_confidence * 100).toFixed(4);
+		let img_index = 0;
+		for (let result of results) {
+			const new_text = document.createElement('h4');
+			const confidence = (result.nsfw_confidence * 100).toFixed(4);
 
-				new_text.innerText = `${result.is_nsfw ? 'NSFW' : 'SFW'} - (${confidence}%)`;
+			new_text.innerText = `${result.is_nsfw ? 'NSFW' : 'SFW'} - (${confidence}%)`;
 
-				images[img_index].parentElement.appendChild(new_text);
-				img_index++;
-			}
-		});
+			images[img_index].parentElement.appendChild(new_text);
+			img_index++;
+		}
 	}
 
 	document.addEventListener('DOMContentLoaded', classify_images);
