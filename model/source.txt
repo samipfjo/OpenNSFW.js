@@ -1,0 +1,1 @@
+This model is a conversion of https://github.com/bhky/opennsfw2 to the tensorflowjs format
