@@ -237,6 +237,8 @@ export class OpenNSFW {
     **/
     public async load(save_after_loaded: boolean = true): Promise<void> {
         return new Promise(async resolve => {
+            await tf.setBackend('webgl');
+
             tf.serialization.registerClass(PadTensor);
 
             const was_cached = await this.isCached();
