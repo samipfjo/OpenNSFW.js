@@ -16,7 +16,7 @@
 
 <br>
 
-### [Read the API documentation here](https://lukepfjo.github.io/OpenNSFW.js/)
+### [Read the API documentation here](https://samipfjo.github.io/OpenNSFW.js/)
 
 <br>
 
