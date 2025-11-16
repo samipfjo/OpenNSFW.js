@@ -4,7 +4,7 @@
 <br>
 
 ### Motivation
- There are several projects that offer Tensorflow.js NSFW classification, but all of the models I tried had serious training bias against people of color, causing regular false positives due to the subject's skin color. This was highly disturbing and made them completely unusable for the project I was working on ([YouTube Spam Remover](https://github.com/lukepfjo/YouTube-Spam-Remover)). After several days of searching, the best model I could find was Yahoo's OpenNSFW. There was not yet a port to Tensorflow.js, and thus this project was born.
+ There are several projects that offer Tensorflow.js NSFW classification, but all of the models I tried had serious training bias against people of color, causing regular false positives due to the subject's skin color. This was highly disturbing and made them completely unusable for the project I was working on ([YouTube Spam Remover](https://github.com/samipfjo/YouTube-Spam-Remover)). After several days of searching, the best model I could find was Yahoo's OpenNSFW. There was not yet a port to Tensorflow.js, and thus this project was born.
 
 <br>
 
